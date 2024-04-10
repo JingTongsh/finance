@@ -33,6 +33,16 @@ python main.py
 
 代码会自动在 `metrics` 文件夹记录评价指标，在 `models` 文件夹存储训练好的模型。
 
+## Result
+
+| Method | AUC |
+| ------ | --- |
+| logistic regression | **0.698** |
+| mlp | 0.637 |
+| random forest | 0.594 |
+| xgboost | 0.643 |
+| gradient boosting | 0.623 |
+
 ## TODO
 
 * recall很低，可能需要调阈值

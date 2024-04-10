@@ -10,6 +10,7 @@ from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, reca
 import joblib
 import json
 import os
+import numpy as np
 
 
 def load_data():
@@ -34,13 +35,15 @@ def load_data():
 
 def evaluate_metrics(y_true, y_pred):
     # dict
-    metrics = {'auc': roc_auc_score(y_true, y_pred)}
-    thresh = 0.5
-    y_pred_binary = y_pred > thresh
-    metrics['accuracy'] = accuracy_score(y_true, y_pred_binary)
-    metrics['precision'] = precision_score(y_true, y_pred_binary)
-    metrics['recall'] = recall_score(y_true, y_pred_binary)
-    return metrics
+    all_metrics = {}
+    for thresh in np.arange(0.1, 1.0, 0.1):
+        metrics = {'auc': roc_auc_score(y_true, y_pred)}
+        y_pred_binary = y_pred > thresh
+        metrics['accuracy'] = accuracy_score(y_true, y_pred_binary)
+        metrics['precision'] = precision_score(y_true, y_pred_binary)
+        metrics['recall'] = recall_score(y_true, y_pred_binary)
+        all_metrics[f'threshold {thresh}'] = metrics
+    return all_metrics
 
 
 def train_eval_xgboost():
@@ -91,10 +94,10 @@ def train_eval_sklearn(model_name: str):
     test_y = test_y.values.ravel()
     
     models = {
-        'logistic regression': LogisticRegression(),
+        'logistic regression': LogisticRegression(C=1e-3, penalty='l2'),
         'random forest': RandomForestClassifier(),
         'gradient boosting': GradientBoostingClassifier(),
-        'mlp': MLPClassifier(),
+        'mlp': MLPClassifier(hidden_layer_sizes=[2048]),
         'xgboost': XGBClassifier()
     }
     
