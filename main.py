@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 import joblib
 import json
+import os
 
 
 def load_data():
@@ -64,12 +65,12 @@ def train_eval_xgboost():
 
     # Evaluate the model
     metrics = evaluate_metrics(test_y, preds)
-    with open('metrics_xgboost.json', 'w') as f:
+    with open('metrics/xgboost.json', 'w') as f:
         json.dump(metrics, f)
     print(f'metrics: {metrics}')
 
     # Save the trained model
-    model.save_model('xgboost_model.bin')
+    model.save_model('models/xgboost_model.bin')
 
 
 def train_eval_sklearn(model_name: str):
@@ -106,16 +107,19 @@ def train_eval_sklearn(model_name: str):
 
     # Evaluate the model
     metrics = evaluate_metrics(test_y, preds)
-    with open(f'metrics_{model_name}.json', 'w') as f:
+    file_name = model_name.replace(' ', '_')
+    with open(f'metrics/{file_name}.json', 'w') as f:
         json.dump(metrics, f)
     print(f'Done training {model_name}')
     print(f'metrics: {metrics}')
 
     # Save the trained model
-    joblib.dump(model, f'{model_name}_model.pkl')
+    joblib.dump(model, f'models/{model_name}_model.pkl')
 
 
 if __name__ == '__main__':
+    for dir_name in ['models', 'metrics']:
+        os.makedirs(dir_name, exist_ok=True)
     # train_eval_xgboost()
     for model_name in ['logistic regression', 'random forest', 'gradient boosting', 'mlp', 'xgboost']:
         train_eval_sklearn(model_name)
