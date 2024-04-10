@@ -2,11 +2,8 @@
 .vscode
 __pycache__
 data
-metrics
 models
 results
-*.json
-*.txt
 *.bin
 *.pkl
 view*
