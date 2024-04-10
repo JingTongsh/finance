@@ -1,0 +1,11 @@
+.idea
+.vscode
+__pycache__
+data
+metrics
+results
+*.json
+*.txt
+*.bin
+*.pkl
+view*
