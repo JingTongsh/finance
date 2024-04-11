@@ -56,9 +56,10 @@ def train_eval_xgboost():
     params = {
         'objective': 'binary:logistic',
         'eval_metric': ['logloss', 'auc'],
-        'max_depth': 3,
+        'max_depth': 6,
         'eta': 0.1,
         'device': 'cuda',
+        'lambda': 0.5,
     }
 
     model = xgb.train(params, dtrain, num_boost_round=100, evals=[(dtest, 'test')])
@@ -123,8 +124,8 @@ def train_eval_sklearn(model_name: str):
 if __name__ == '__main__':
     for dir_name in ['models', 'metrics']:
         os.makedirs(dir_name, exist_ok=True)
-    # train_eval_xgboost()
-    for model_name in ['logistic regression', 'random forest', 'gradient boosting', 'mlp', 'xgboost']:
-        train_eval_sklearn(model_name)
+    train_eval_xgboost()
+    # for model_name in ['svc', 'logistic regression', 'random forest', 'gradient boosting', 'mlp', 'xgboost']:
+    #     train_eval_sklearn(model_name)
         
     

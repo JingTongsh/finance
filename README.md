@@ -37,10 +37,10 @@ python main.py
 
 | Method | AUC |
 | ------ | --- |
-| logistic regression | **0.698** |
+| logistic regression | 0.698 |
 | mlp | 0.637 |
 | random forest | 0.594 |
-| xgboost | 0.643 |
+| xgboost | **0.706** |
 | gradient boosting | 0.623 |
 
 ## TODO
