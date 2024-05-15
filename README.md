@@ -19,7 +19,7 @@ ln -s /path/to/data data
 conda create -n xgb python=3.11.5
 conda activate xgb
 # 安装所需库
-pip install -U pandas scikit-learn xgboost
+pip install -U matplotlib pandas scikit-learn xgboost
 # 或
 pip install -r requirements.txt
 ```

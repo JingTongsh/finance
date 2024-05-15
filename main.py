@@ -6,11 +6,12 @@ from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, roc_curve
 import joblib
 import json
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def load_data():
@@ -46,12 +47,24 @@ def evaluate_metrics(y_true, y_pred):
     return all_metrics
 
 
+def plot_roc_curve(y_true, y_pred, title: str, save_file: str):
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    plt.plot(fpr, tpr)
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(title)
+    plt.savefig(save_file)
+    plt.show()
+    plt.close()
+    print(f'ROC curve saved to {save_file}')
+   
+
 def train_eval_xgboost():
     train_x, train_y, test_x, test_y = load_data()
     # Convert the data to DMatrix format
     dtrain = xgb.DMatrix(train_x, label=train_y)
     dtest = xgb.DMatrix(test_x, label=test_y)
-    
+
     # Set the parameters for XGBoost
     params = {
         'objective': 'binary:logistic',
@@ -68,9 +81,13 @@ def train_eval_xgboost():
     preds = model.predict(dtest)
 
     # Evaluate the model
+    title = 'XGBoost ROC curve'
+    roc_curve_file = 'metrics/xgboost-tuned.png'
+    plot_roc_curve(test_y, preds, title, roc_curve_file)
     metrics = evaluate_metrics(test_y, preds)
-    with open('metrics/xgboost.json', 'w') as f:
+    with open('metrics/xgboost-tuned.json', 'w') as f:
         json.dump(metrics, f)
+        print(f'Metrics saved to metrics/xgboost-tuned.json')
     print(f'metrics: {metrics}')
 
     # Save the trained model
@@ -110,15 +127,20 @@ def train_eval_sklearn(model_name: str):
     preds = model.predict_proba(test_x)[:, 1]
 
     # Evaluate the model
-    metrics = evaluate_metrics(test_y, preds)
     file_name = model_name.replace(' ', '_')
+    title = f'{model_name} ROC curve'
+    roc_curve_file = f'metrics/{file_name}.png'
+    plot_roc_curve(test_y, preds, title, roc_curve_file)
+    metrics = evaluate_metrics(test_y, preds)
     with open(f'metrics/{file_name}.json', 'w') as f:
         json.dump(metrics, f)
+        print(f'Metrics saved to metrics/{file_name}.json')
     print(f'Done training {model_name}')
     print(f'metrics: {metrics}')
 
     # Save the trained model
     joblib.dump(model, f'models/{model_name}_model.pkl')
+
 
 
 if __name__ == '__main__':
