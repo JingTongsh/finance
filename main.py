@@ -47,24 +47,24 @@ def evaluate_metrics(y_true, y_pred):
     return all_metrics
 
 
-def plot_roc_curve(y_true, y_pred, save_file: str):
+def plot_roc_curve(y_true, y_pred, title: str, save_file: str):
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
     plt.plot(fpr, tpr)
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
+    plt.title(title)
     plt.savefig(save_file)
     plt.show()
     plt.close()
     print(f'ROC curve saved to {save_file}')
-
+   
 
 def train_eval_xgboost():
     train_x, train_y, test_x, test_y = load_data()
     # Convert the data to DMatrix format
     dtrain = xgb.DMatrix(train_x, label=train_y)
     dtest = xgb.DMatrix(test_x, label=test_y)
-    
+
     # Set the parameters for XGBoost
     params = {
         'objective': 'binary:logistic',
@@ -81,8 +81,9 @@ def train_eval_xgboost():
     preds = model.predict(dtest)
 
     # Evaluate the model
-    roc_curve_file = 'metrics/xgboost.png'
-    plot_roc_curve(test_y, preds, roc_curve_file)
+    title = 'XGBoost ROC curve'
+    roc_curve_file = 'metrics/xgboost-tuned.png'
+    plot_roc_curve(test_y, preds, title, roc_curve_file)
     metrics = evaluate_metrics(test_y, preds)
     with open('metrics/xgboost-tuned.json', 'w') as f:
         json.dump(metrics, f)
@@ -127,8 +128,9 @@ def train_eval_sklearn(model_name: str):
 
     # Evaluate the model
     file_name = model_name.replace(' ', '_')
+    title = f'{model_name} ROC curve'
     roc_curve_file = f'metrics/{file_name}.png'
-    plot_roc_curve(test_y, preds, roc_curve_file)
+    plot_roc_curve(test_y, preds, title, roc_curve_file)
     metrics = evaluate_metrics(test_y, preds)
     with open(f'metrics/{file_name}.json', 'w') as f:
         json.dump(metrics, f)
@@ -138,6 +140,7 @@ def train_eval_sklearn(model_name: str):
 
     # Save the trained model
     joblib.dump(model, f'models/{model_name}_model.pkl')
+
 
 
 if __name__ == '__main__':

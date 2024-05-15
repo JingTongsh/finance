@@ -2,9 +2,12 @@
 .vscode
 __pycache__
 data
+metrics
 models
 results
 *.bin
 *.pkl
 view*
 *.png
+*.txt
+*.tar.gz
