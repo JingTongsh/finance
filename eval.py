@@ -1,4 +1,5 @@
 import seaborn as sns
+from matplotlib import ticker
 from main import *
 
 # load all models, plot roc in one figure
@@ -48,6 +49,60 @@ def main():
     plt.close()
     print('ROC curves saved to metrics/all_models.png')
 
+def positive_proportion_curve(num_boxes: int = 100):
+    """
+    Load all model and predict on test data.
+    in each box, show the proportion of positive samples and make a curve.
+    """
+    models = load_models()
+    _, _, test_x, test_y = load_data()
+    
+    # data for xgb
+    dtest = xgb.DMatrix(test_x, label=test_y)
+    
+    # data for sklearn models
+    imputer = SimpleImputer(strategy='mean')
+    test_x = imputer.fit_transform(test_x)
+    scaler = StandardScaler()
+    test_x = scaler.fit_transform(test_x)
+    test_y = test_y.values.ravel()
+    
+    # plot roc curve for all models
+    fig, ax = plt.subplots()
+    for model_name, model in models.items():
+        # 1是正样本
+        preds = model.predict_proba(test_x)[:, 1] if model_name != 'xgboost' else model.predict(dtest)
+        preds_sort = abs(np.sort(-preds))
+        box_size = 1 / num_boxes
+        positive_proportions = []
+        # 前百分之x样本里正样本的比例
+        for i in range(num_boxes):
+            bound = (i+1) * box_size #前bound分数中正样本比例
+            score = preds_sort[(int)(bound*len(preds_sort))-1]
+            # print(score)
+            y_p = 0
+            y_a = 0
+            for j in range(len(test_y)):
+                if preds[j]>score:
+                    y_a += 1
+                    if test_y[j] == 1:
+                        y_p += 1
+            # print(y_a," ",y_p)
+            positive_proportion = y_p/(y_a+0.0001)
+            positive_proportions.append(positive_proportion)
+        ax.plot(np.arange(num_boxes)/num_boxes, positive_proportions, label=f'{model_name}')
+    
+    ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=1))
+    ax.xaxis.set_major_formatter(ticker.PercentFormatter(xmax=1, decimals=1))
+    ax.set_xlabel('Proportion of total samples')
+    ax.set_ylabel('Proportion of positive samples')
+    ax.set_title('Proportion of positive samples in the total sample')
+    ax.legend(loc='best')
+    
+    plt.show()
+    plt.savefig('metrics/positive_proportion_curve.png')
+    plt.close()
+    print('Proportion of positive samples in the total sample saved to metrics/positive_proportion_curve.png')
 
 def box_proportion(num_boxes: int = 100):
     """
@@ -194,6 +249,9 @@ def correlation_with_output():
         
 
 if __name__ == '__main__':
-    correlation_with_output()
+    # correlation_with_output()
+    # box_proportion(30)
+    # count_positive()
+    positive_proportion_curve(100)
     
     
