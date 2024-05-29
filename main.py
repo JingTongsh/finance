@@ -39,6 +39,10 @@ def evaluate_metrics(y_true, y_pred):
     all_metrics = {}
     for thresh in np.arange(0.1, 1.0, 0.1):
         metrics = {'auc': roc_auc_score(y_true, y_pred)}
+        # 可以选择用这个thrshold
+        fpr, tpr, thresholds= roc_curve(y_true, y_pred)
+        ks = max(abs(fpr-tpr))
+        metrics["KS"] = ks.astype('float')
         y_pred_binary = y_pred > thresh
         metrics['accuracy'] = accuracy_score(y_true, y_pred_binary)
         metrics['precision'] = precision_score(y_true, y_pred_binary)
@@ -58,6 +62,21 @@ def plot_roc_curve(y_true, y_pred, title: str, save_file: str):
     plt.close()
     print(f'ROC curve saved to {save_file}')
    
+def plot_ks_curve(y_true, y_pred, title: str, save_file: str):
+    fpr, tpr, thresholds= roc_curve(y_true, y_pred)
+    ks = max(abs(fpr-tpr))
+    plt.plot(fpr, label='bad')
+    plt.plot(tpr, label='good')
+    plt.plot(abs(fpr-tpr), label='diff')
+    # 标记ks
+    x = np.argwhere(abs(fpr-tpr) == ks)[0, 0]
+    plt.plot((x, x), (0, ks), label='ks - {:.2f}'.format(ks), color='r', marker='o', markerfacecolor='r', markersize=5)
+    plt.scatter((x, x), (0, ks), color='r')
+    plt.legend()
+    plt.savefig(save_file)
+    plt.show()
+    plt.close()
+    print(f'KS curve saved to {save_file}')
 
 def train_eval_xgboost():
     train_x, train_y, test_x, test_y = load_data()
@@ -84,6 +103,9 @@ def train_eval_xgboost():
     title = 'XGBoost ROC curve'
     roc_curve_file = 'metrics/xgboost-tuned.png'
     plot_roc_curve(test_y, preds, title, roc_curve_file)
+    title = 'XGBoost KS curve'
+    ks_curve_file = 'metrics/xgboost-ks.png'
+    plot_ks_curve(test_y, preds, title, ks_curve_file)
     metrics = evaluate_metrics(test_y, preds)
     with open('metrics/xgboost-tuned.json', 'w') as f:
         json.dump(metrics, f)
@@ -131,6 +153,9 @@ def train_eval_sklearn(model_name: str):
     title = f'{model_name} ROC curve'
     roc_curve_file = f'metrics/{file_name}.png'
     plot_roc_curve(test_y, preds, title, roc_curve_file)
+    title = 'XGBoost KS curve'
+    ks_curve_file = f'metrics/{file_name}-ks.png'
+    plot_ks_curve(test_y, preds, title, ks_curve_file)
     metrics = evaluate_metrics(test_y, preds)
     with open(f'metrics/{file_name}.json', 'w') as f:
         json.dump(metrics, f)
