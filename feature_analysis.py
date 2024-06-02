@@ -11,12 +11,15 @@ def missing_rate(train_x):
     print("Missing rates per feature:")
     print(missing_rates)
 
-def calculate_iv(df, feature, target_series):
+def calculate_iv(df, feature, target_series, bins):
     data = pd.DataFrame({
         'Feature': df[feature],
         'Target': target_series.squeeze(),
     })
-    data['bin'] = pd.qcut(data['Feature'], q=10, duplicates='drop')
+    # 等频分箱
+    # data['bin'] = pd.qcut(data['Feature'], q=10, duplicates='drop')
+    # 等宽分箱
+    data['bin'] = pd.cut(data['Feature'], bins=bins)
     groups = data.groupby('bin')['Target'].agg(['count', 'sum'])
     groups['good'] = groups['count'] - groups['sum']
     groups['bad'] = groups['sum']
@@ -29,11 +32,12 @@ def calculate_iv(df, feature, target_series):
 def calculate_all_ivs(df, target_series):
     # Initialize a dictionary to store IV values for all features
     features_iv = {}
+    bins = 75      # best param
     # Loop over each column in the dataframe except the target series
     for col in df.columns:
-        iv = calculate_iv(df, col, target_series)
+        iv = calculate_iv(df, col, target_series, bins)
         features_iv[col] = iv
-    with open('metrics/ivs.json', 'w') as f:
+    with open('metrics/ivs_0602.json', 'w') as f:
         json.dump(features_iv, f)
     print("IV values per feature:")
     print(features_iv)
